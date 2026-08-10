@@ -1,0 +1,14 @@
+# Ignore everything by default
+*
+
+# Allow tracking of .gitignore itself
+!.gitignore
+
+# Explicitly whitelist requested files
+!main.nf
+!nextflow.config
+!params.yaml
+
+# Explicitly whitelist the modules folder and all its contents
+!modules/
+!modules/**

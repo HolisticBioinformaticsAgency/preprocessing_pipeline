@@ -1,0 +1,33 @@
+# ============================================================
+# Pipeline Parameters (params.yaml)
+# ============================================================
+
+# -------------------- Inputs --------------------
+samplesheet: "samplesheet.csv"
+
+# -------------------- Reference Base (informational) --------------------
+ref_base: "/fs04/vh83/pipeline_reference"
+
+# -------------------- Core References --------------------
+reference: "/fs04/vh83/pipeline_reference/genomes/hg38/Homo_sapiens_assembly38.fasta"
+reference_fai: "/fs04/vh83/pipeline_reference/genomes/hg38/Homo_sapiens_assembly38.fasta.fai"
+bed: "/fs04/vh83/pipeline_reference/panels/Agilent_exomes/SureSelectXTHS2_V8_hg38/S33266436_Padded_namefixed_filtered.bed"
+
+# -------------------- Outputs --------------------
+outdir: "results_cnvkit_dlc_260730"
+
+# -------------------- VarDict --------------------
+min_af: 0.01
+
+# -------------------- CNVkit --------------------
+cnvkit_pon: "/fs04/vh83/pipeline_reference/panels/CNVkit_ref/SureSelectXTHS2_V8_hg38_MOLBI_normals.cnn"
+
+# -------------------- Polysolver --------------------
+polysolver_race: "Unknown"
+polysolver_build: "hg38"
+polysolver_emit_vcf: 0
+polysolver_fastqtype: "STDFQ"
+polysolver_insertcalc: 0
+
+# -------------------- MultiQC --------------------
+multiqc_extra_args: ""
