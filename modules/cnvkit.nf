@@ -78,7 +78,7 @@ process CNVKIT {
     -o ${case_id}.genemetrics_cns.tsv
 
   # Whole-genome scatter + diagram
-  cnvkit.py scatter ${case_id}.cnr -s ${case_id}.cbs.dlc.cns --segment-color none -g '' -o ${case_id}-scatter.pdf || true
+  cnvkit.py scatter ${case_id}.cnr -s ${case_id}.cbs.dlc.cns -o ${case_id}-scatter.pdf || true
   cnvkit.py diagram ${case_id}.cnr -s ${case_id}.cbs.dlc.cns -o ${case_id}-diagram.pdf || true
   """
 }
