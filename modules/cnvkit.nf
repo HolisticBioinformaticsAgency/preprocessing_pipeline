@@ -41,6 +41,9 @@ process CNVKIT {
   cnvkit.py call ${case_id}.cbs.dlc.cns \\
     --output ${case_id}.cbs.dlc.call.cns
 """
+  def scatter_vcf = (mode == 'paired')
+    ? "--vcf ${norm_vcf} --sample-id ${main_id} --normal-id ${ctrl_id} --zygosity-freq 0.35 --min-variant-depth 30"
+    : ""
   """
   set -euo pipefail
   export MPLCONFIGDIR='/tmp'
@@ -77,8 +80,9 @@ process CNVKIT {
     -t 0 \\
     -o ${case_id}.genemetrics_cns.tsv
 
-  # Whole-genome scatter + diagram
-  cnvkit.py scatter ${case_id}.cnr -s ${case_id}.cbs.dlc.cns -o ${case_id}-scatter.pdf || true
-  cnvkit.py diagram ${case_id}.cnr -s ${case_id}.cbs.dlc.cns -o ${case_id}-diagram.pdf || true
+  # Whole-genome scatter + diagram (use the called .cns so segments are
+  # coloured by CNA status / LOH; scatter also gets the BAF panel when paired)
+  cnvkit.py scatter ${case_id}.cnr -s ${case_id}.cbs.dlc.call.cns ${scatter_vcf} -o ${case_id}-scatter.pdf || true
+  cnvkit.py diagram ${case_id}.cnr -s ${case_id}.cbs.dlc.call.cns -o ${case_id}-diagram.pdf || true
   """
 }

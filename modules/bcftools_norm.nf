@@ -18,6 +18,7 @@ process BCFTOOLS_NORM {
   bcftools reheader -f ${ref_fai} ${vcf} \
   | bcftools norm \
       -f ${ref_fa} \
+      -c wx \
       -m -any \
       -O v \
   | bgzip > ${out}
