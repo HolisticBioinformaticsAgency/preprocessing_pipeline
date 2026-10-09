@@ -12,3 +12,11 @@
 # Explicitly whitelist the modules folder and all its contents
 !modules/
 !modules/**
+
+# Explicitly whitelist the bin folder
+!bin/
+!bin/**
+
+# Never track Python cache, even inside whitelisted folders
+__pycache__/
+*.pyc
