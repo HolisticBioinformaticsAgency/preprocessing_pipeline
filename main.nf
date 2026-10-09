@@ -9,6 +9,7 @@ include { POLYSOLVER }                     from './modules/polysolver.nf'
 include { VARDICT_SINGLE }                 from './modules/vardict.nf'
 include { VARDICT_PAIRED }                 from './modules/vardict.nf'
 
+include { FACETS }                         from './modules/facets.nf'
 include { CNVKIT }                         from './modules/cnvkit.nf'
 
 include { MSIPRO_SCAN }                    from './modules/msipro_scan.nf'
@@ -95,14 +96,17 @@ workflow {
 
   // ---------- Group by subject ----------
   def by_subject = ch_bam_meta
-    .map { sub, sample, status, sex, bam, bai -> tuple(sub, tuple(sample, status, bam, bai)) }
+    .map { sub, sample, status, sex, bam, bai -> tuple(sub, tuple(sample, status, bam, bai, sex)) }
     .groupTuple()
     .map { sub, recs -> tuple(sub, recs.sort { a, b -> a[0] <=> b[0] }) }
 
   // ---------- Compute cases and publishing base ----------
+  // Each sample record carries its samplesheet 'sex' as a trailing element (index 4),
+  // appended after the existing (sample, bam, bai, role) shape so nothing downstream
+  // that only reads indices 0-3 needs to change.
   def ch_cases_pub = by_subject.flatMap { sub, recs ->
-    def tumors  = recs.findAll { it[1] == 'tumor'  }.collect { [ it[0], it[2], it[3], 'tumor'  ] }
-    def normals = recs.findAll { it[1] == 'normal' }.collect { [ it[0], it[2], it[3], 'normal' ] }
+    def tumors  = recs.findAll { it[1] == 'tumor'  }.collect { [ it[0], it[2], it[3], 'tumor',  it[4] ] }
+    def normals = recs.findAll { it[1] == 'normal' }.collect { [ it[0], it[2], it[3], 'normal', it[4] ] }
 
     def ncases = (tumors && normals) ? (tumors.size() * normals.size()) : recs.size()
 
@@ -119,7 +123,7 @@ workflow {
       recs.each { r ->
         def case_id = r[0]
         def base    = (ncases > 1) ? "${params.outdir}/${sub}/${case_id}" : "${params.outdir}/${sub}"
-        out << tuple(sub, case_id, 'single', [ [ r[0], r[2], r[3], r[1] ] ], base)
+        out << tuple(sub, case_id, 'single', [ [ r[0], r[2], r[3], r[1], r[4] ] ], base)
       }
     }
     out
@@ -181,6 +185,30 @@ workflow {
     .combine( ch_ref_fai )
   BCFTOOLS_NORM( ch_norm_in )
 
+  // ---------- FACETS (paired cases only) ----------
+  // Tumour purity/ploidy from the matched pair; feeds CNVkit `call --purity`.
+  def ch_facets_in = ch_cases_pub
+    .filter { sub, case_id, mode, samples, pub_base -> mode == 'paired' }
+    .flatMap { sub, case_id, mode, samples, pub_base ->
+      def tumors  = samples.findAll { it[3] == 'tumor' }
+      def normals = samples.findAll { it[3] == 'normal' }
+      tumors.collectMany { t ->
+        normals.collect { n ->
+          tuple(pub_base, sub, case_id, t[0], t[1], t[2], n[0], n[1], n[2])
+        }
+      }
+    }
+
+  FACETS( ch_facets_in )
+
+  // (case_id, purity-string)   purity-string is a number or "NA"
+  def ch_facets_purity = FACETS.out.purity
+    .map { case_id, pfile -> tuple(case_id, pfile.text.trim()) }
+
+  // (case_id, ploidy-string)   ploidy-string is a number or "NA"
+  def ch_facets_ploidy = FACETS.out.ploidy
+    .map { case_id, pfile -> tuple(case_id, pfile.text.trim()) }
+
   // ---------- CNVkit per case ----------
   // Norm'd VarDict VCF for each case, keyed by case_id, used by CNVkit call for BAF/allele-specific CN
   def ch_norm_vcf = BCFTOOLS_NORM.out.vcfgz
@@ -193,19 +221,22 @@ workflow {
         def normals = samples.findAll { it[3] == 'normal' }
         tumors.collectMany { t ->
           normals.collect { n ->
-            tuple(case_id, pub_base, sub, mode, t[0], t[1], t[2], n[0], n[1], n[2])
+            tuple(case_id, pub_base, sub, mode, t[0], t[1], t[2], n[0], n[1], n[2], t[4])
           }
         }
       } else {
         def s = samples[0]
         [ tuple(case_id, pub_base, sub, mode,
                 s[0], s[1], s[2],
-                'NA', file('/dev/null'), file('/dev/null')) ]
+                'NA', file('/dev/null'), file('/dev/null'), s[4]) ]
       }
     }
     .join( ch_norm_vcf )
-    .map { case_id, pub_base, sub, mode, main_id, main_bam, main_bai, ctrl_id, ctrl_bam, ctrl_bai, vcfgz, tbi ->
-      tuple(pub_base, sub, case_id, mode, main_id, main_bam, main_bai, ctrl_id, ctrl_bam, ctrl_bai, vcfgz, tbi)
+    // left-join FACETS purity/ploidy: single-mode / FACETS-less cases get null -> 'NA'
+    .join( ch_facets_purity, remainder: true )
+    .join( ch_facets_ploidy, remainder: true )
+    .map { case_id, pub_base, sub, mode, main_id, main_bam, main_bai, ctrl_id, ctrl_bam, ctrl_bai, sex, vcfgz, tbi, purity, ploidy ->
+      tuple(pub_base, sub, case_id, mode, main_id, main_bam, main_bai, ctrl_id, ctrl_bam, ctrl_bai, vcfgz, tbi, (purity ?: 'NA'), (ploidy ?: 'NA'), (sex ?: 'NA'))
     }
 
   CNVKIT( ch_cnv_jobs )

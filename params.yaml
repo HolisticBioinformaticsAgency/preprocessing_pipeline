@@ -13,8 +13,12 @@ reference: "/fs04/vh83/pipeline_reference/genomes/hg38/Homo_sapiens_assembly38.f
 reference_fai: "/fs04/vh83/pipeline_reference/genomes/hg38/Homo_sapiens_assembly38.fasta.fai"
 bed: "/fs04/vh83/pipeline_reference/panels/Agilent_exomes/SureSelectXTHS2_V8_hg38/S33266436_Padded_namefixed_filtered.bed"
 
-# -------------------- Outputs --------------------
-outdir: "results_cnvkit_dlc_260730"
+# -------------------- FACETS ---------------------
+common_snps: "/fs04/vh83/pipeline_reference/annotations/facets/common_snps_dbsnp.hg38.identical.vcf.gz"
+min_map_quality: 15
+min_base_quality: 20
+pseudo_snps: 50
+max_depth: 20000
 
 # -------------------- VarDict --------------------
 min_af: 0.01
@@ -31,3 +35,6 @@ polysolver_insertcalc: 0
 
 # -------------------- MultiQC --------------------
 multiqc_extra_args: ""
+
+# -------------------- Outputs --------------------
+outdir: "results_cnvkit_purity_ploidy_sex_261509"

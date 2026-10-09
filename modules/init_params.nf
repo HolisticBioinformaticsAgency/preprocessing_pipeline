@@ -7,6 +7,13 @@ workflow INIT_PARAMS {
   if( !params.containsKey('min_af')        ) params.min_af         = 0.05
   if( !params.containsKey('multiqc_extra_args') ) params.multiqc_extra_args = ''
 
+  // FACETS (tumour purity/ploidy; paired cases only)
+  if( !params.containsKey('common_snps')            ) params.common_snps            = null
+  if( !params.containsKey('min_map_quality')        ) params.min_map_quality        = 15
+  if( !params.containsKey('min_base_quality')       ) params.min_base_quality       = 20
+  if( !params.containsKey('pseudo_snps')            ) params.pseudo_snps            = 50
+  if( !params.containsKey('max_depth')              ) params.max_depth              = 20000
+
   // MSI tumor-only baseline (optional)
   if( !params.containsKey('msipro_baseline') ) params.msipro_baseline = null
 
