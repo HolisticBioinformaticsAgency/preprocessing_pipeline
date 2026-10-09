@@ -280,3 +280,17 @@ workflow {
   def ch_multiqc_inputs = ch_dedup_metrics.mix(ch_hsmetrics_files).mix(FASTQC.out.zip).collect()
   MULTIQC( ch_multiqc_inputs )
 }
+
+
+// Run summary for the copy-number record and any report built on these outputs (CGen, 2026-10-09):
+// code version, Nextflow version, dates, outcome, command line and every parameter.
+workflow.onComplete {
+    def rev = workflow.commitId ?: "git -C ${projectDir} rev-parse HEAD".execute().text.trim()
+    def dirty = workflow.commitId ? "" : "git -C ${projectDir} status --porcelain".execute().text.trim()
+    def info = [revision: rev, uncommitted_changes: dirty ? true : false, nextflow: nextflow.version.toString(),
+                started: workflow.start.toString(), completed: workflow.complete.toString(), success: workflow.success,
+                command: workflow.commandLine, params: params]
+    file("${params.outdir}/pipeline_info").mkdirs()
+    file("${params.outdir}/pipeline_info/run_info_${workflow.start.format('yyyyMMdd_HHmmss')}.json").text =
+        groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(info))
+}

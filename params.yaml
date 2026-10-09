@@ -23,6 +23,9 @@ max_depth: 20000
 # -------------------- VarDict --------------------
 min_af: 0.01
 
+# MSIsensor-pro minimum coverage, as in CGen's local recipe (CGen, 2026-10-09)
+msi_min_coverage: 20
+
 # -------------------- CNVkit --------------------
 cnvkit_pon: "/fs04/vh83/pipeline_reference/panels/CNVkit_ref/SureSelectXTHS2_V8_hg38_MOLBI_normals.cnn"
 

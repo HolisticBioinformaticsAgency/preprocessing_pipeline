@@ -27,6 +27,7 @@ process CNVKIT {
   path "${case_id}.cbs.dlc.purity.ploidy.call.cns", optional: true, emit: purity_call_cns
   path "${case_id}.genemetrics_cnr.tsv",           emit: genemetrics_cnr
   path "${case_id}.genemetrics_cns.tsv",           emit: genemetrics_cns
+  path "${case_id}.genemetrics_call_cns.tsv",      emit: genemetrics_call_cns
   path "${case_id}-scatter.pdf", optional: true,   emit: scatter
   path "${case_id}-diagram.pdf", optional: true,   emit: diagram
 
@@ -117,6 +118,12 @@ process CNVKIT {
     -s ${eff_cns} \\
     -t 0 \\
     -o ${case_id}.genemetrics_cns.tsv
+
+  # The same on the plain (no purity) call: CGenGx reads the plain call, so its gene table has to come from it too (CGen, 2026-10-09)
+  cnvkit.py genemetrics ${case_id}.cnr \\
+    -s ${case_id}.cbs.dlc.call.cns \\
+    -t 0 \\
+    -o ${case_id}.genemetrics_call_cns.tsv
 
   # Whole-genome scatter + diagram (use the effective called .cns so segments are
   # coloured by CNA status / LOH; scatter also gets the BAF panel when paired)

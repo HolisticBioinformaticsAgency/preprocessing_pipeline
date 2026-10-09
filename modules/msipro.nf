@@ -40,6 +40,7 @@ process MSIPRO_PAIRED {
     -t ${tumor_bam} \\
     -g ${fasta} \\
     -o ${case_id} \\
+    -c ${params.msi_min_coverage} \\
     -b ${task.cpus} \\
     > ${case_id}.log 2>&1
 
